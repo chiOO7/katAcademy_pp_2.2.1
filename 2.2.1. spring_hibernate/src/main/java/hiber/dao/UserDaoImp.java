@@ -1,10 +1,13 @@
 package hiber.dao;
 
+import hiber.model.Car;
 import hiber.model.User;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.List;
 
@@ -22,8 +25,36 @@ public class UserDaoImp implements UserDao {
    @Override
    @SuppressWarnings("unchecked")
    public List<User> listUsers() {
-      TypedQuery<User> query=sessionFactory.getCurrentSession().createQuery("from User");
+      TypedQuery<User> query = sessionFactory.getCurrentSession().createQuery("from User");
       return query.getResultList();
    }
+
+//   select e from Employee e inner join e.team
+
+   @Override
+   public User getUserByCar(String model, int series) {
+      Query query = sessionFactory.getCurrentSession().createQuery("select u from User u inner join u.car c where model = :pModel and series = :pSeries")
+              .setParameter("pModel", model)
+              .setParameter("pSeries", series);
+      return (User) query.getSingleResult();
+   }
+
+   @Override
+   public void truncateTables() {
+
+      sessionFactory.getCurrentSession().createSQLQuery("SET FOREIGN_KEY_CHECKS = 0;").executeUpdate();
+      sessionFactory.getCurrentSession().createSQLQuery("truncate spring_hiber.cars;").executeUpdate();
+      sessionFactory.getCurrentSession().createSQLQuery("SET FOREIGN_KEY_CHECKS = 1").executeUpdate();
+      sessionFactory.getCurrentSession().createSQLQuery("truncate spring_hiber.users").executeUpdate();
+   }
+
+   @Override
+   public void dropTables() {
+      sessionFactory.getCurrentSession().createSQLQuery("SET FOREIGN_KEY_CHECKS = 0;").executeUpdate();
+      sessionFactory.getCurrentSession().createSQLQuery("drop table spring_hiber.cars;").executeUpdate();
+      sessionFactory.getCurrentSession().createSQLQuery("SET FOREIGN_KEY_CHECKS = 1").executeUpdate();
+      sessionFactory.getCurrentSession().createSQLQuery("drop table spring_hiber.users;").executeUpdate();
+   }
+
 
 }
